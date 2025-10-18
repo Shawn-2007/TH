@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TH 七兄弟｜互動學習卡</title>
+  <style>
+    :root{
+      --bg:#0b0f14;--fg:#e6e8ea;--card:#111827;--muted:#9aa3af;--line:#1f2937;--ok:#10b981;--bad:#ef4444;--warn:#f59e0b;
+      --accent:#60a5fa;--accent2:#34d399
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans TC",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg)}
+    .app{min-height:100%;display:flex;flex-direction:column}
+    header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+    .title{font-weight:800;letter-spacing:.3px}
+    .pill{display:inline-flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);padding:6px 10px;border-radius:999px;font-size:12px;color:var(--muted)}
+    main{flex:1;display:flex;flex-direction:column;gap:12px;padding:16px}
+    .tabs{display:flex;gap:8px}
+    .tab{flex:1;text-align:center;border:1px solid var(--line);background:var(--card);padding:10px;border-radius:12px;cursor:pointer}
+    .tab.active{outline:2px solid var(--accent);}
+    .screen{display:none}
+    .screen.active{display:block}
+
+    .card{max-width:840px;margin:12px auto;background:linear-gradient(180deg,#0f172a 0%, #0b1220 80%);border:1px solid var(--line);border-radius:20px;padding:18px}
+    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .top{justify-content:space-between}
+    .big{font-size:56px;font-weight:900;letter-spacing:.5px}
+    .tag{font-size:12px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:#d1d5db}
+    .desc{color:#d1d5db}
+    .meta{display:flex;gap:8px;flex-wrap:wrap}
+    .meta .chip{background:#0c1625;border:1px solid #1f2a3a;color:#bcd0ea;border-radius:999px;padding:6px 10px;font-size:12px}
+    .examples{display:grid;gap:10px;margin-top:14px}
+    .ex{background:#0b1422;border:1px solid #1a2535;border-radius:14px;padding:12px}
+    .ex .en{font-weight:600}
+    .ex .zh{font-size:14px;color:#cbd5e1}
+    .controls{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+    .btn{appearance:none;border:none;border-radius:12px;padding:10px 14px;background:#1a2535;color:#e6e8ea;border:1px solid #253044;cursor:pointer}
+    .btn.primary{background:var(--accent);color:#041015;border-color:#60a5fa}
+    .btn.ghost{background:#0b1220}
+    .btn.warn{background:var(--warn);color:#041015;border-color:#d97706}
+    .btn.good{background:var(--ok);color:#041015;border-color:#10b981}
+    .btn.bad{background:var(--bad);color:#fff;border-color:#ef4444}
+    .spacer{flex:1}
+
+    /* QUIZ */
+    .quiz{max-width:840px;margin:12px auto;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px}
+    .q-title{font-weight:800;margin-bottom:6px}
+    .q{margin:10px 0 14px;color:#e5e7eb}
+    .choices{display:grid;gap:8px;margin-top:8px}
+    .choice{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:#0f172a;color:#e6e8ea;border-radius:12px;padding:10px;cursor:pointer}
+    .choice.correct{border-color:#14532d;background:#052e1a}
+    .choice.wrong{border-color:#7f1d1d;background:#2a0e0e}
+
+    .foot{opacity:.8;font-size:12px;color:var(--muted);text-align:center;margin-top:10px}
+    .muted{color:var(--muted)}
+    .hr{height:1px;background:var(--line);margin:12px 0}
+
+    /* small */
+    @media (max-width:480px){
+      .big{font-size:44px}
+      header .title{font-size:14px}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="title">TH 七兄弟｜互動學習卡</div>
+    <div class="pill"><input id="ttsToggle" type="checkbox" checked style="accent-color:#60a5fa"> 自動發音</div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <div class="tab active" data-tab="cards">學習卡</div>
+      <div class="tab" data-tab="quiz">小測驗</div>
+      <div class="tab" data-tab="map">速查圖</div>
+    </div>
+
+    <!-- CARDS -->
+    <section id="cards" class="screen active">
+      <div id="card" class="card">
+        <div class="row top">
+          <div class="big" id="w">this</div>
+          <div class="meta">
+            <span class="chip" id="pos">代名詞 / 指示</span>
+            <span class="chip" id="axes">近 / 單數</span>
+            <span class="chip" id="hint">距離：伸手可及</span>
+          </div>
+        </div>
+        <div class="desc" id="meaning" style="margin-top:6px">這個（靠近說話者的、單數）</div>
+        <div class="examples" id="examples"></div>
+        <div class="controls">
+          <button class="btn" id="prev">◀︎ 上一張</button>
+          <div class="spacer"></div>
+          <button class="btn ghost" id="speakWord">🔊 讀單字</button>
+          <button class="btn ghost" id="speakEx">🔊 讀例句</button>
+          <button class="btn primary" id="next">下一張 ▶︎</button>
+        </div>
+      </div>
+      <div class="foot">提示：左右鍵也可切換卡片；點「讀單字/例句」可反覆聽發音。</div>
+    </section>
+
+    <!-- QUIZ -->
+    <section id="quiz" class="screen">
+      <div class="quiz">
+        <div class="q-title">隨機選擇題</div>
+        <div id="qText" class="q">（題目載入中…）</div>
+        <div id="choices" class="choices"></div>
+        <div class="hr"></div>
+        <div class="row" style="justify-content:space-between">
+          <button id="again" class="btn warn">換一題</button>
+          <div class="spacer"></div>
+          <button id="reveal" class="btn">顯示答案</button>
+          <button id="speakQ" class="btn ghost">🔊 念題目</button>
+        </div>
+      </div>
+      <div class="foot">題型會在「中文提示 → 英文七選一」與「填空句」之間切換。</div>
+    </section>
+
+    <!-- MAP -->
+    <section id="map" class="screen">
+      <div class="card">
+        <div class="q-title">速查圖：距離 × 數量 × 時間</div>
+        <div class="row" style="gap:16px;flex-wrap:wrap;margin-top:10px">
+          <div class="ex"><div class="en">this</div><div class="zh muted">近 / 單｜這個</div></div>
+          <div class="ex"><div class="en">these</div><div class="zh muted">近 / 複｜這些</div></div>
+          <div class="ex"><div class="en">that</div><div class="zh muted">遠 / 單｜那個</div></div>
+          <div class="ex"><div class="en">those</div><div class="zh muted">遠 / 複｜那些</div></div>
+          <div class="ex"><div class="en">the</div><div class="zh muted">特定｜那個（已知）</div></div>
+          <div class="ex"><div class="en">there</div><div class="zh muted">空間｜那裡 / 有</div></div>
+          <div class="ex"><div class="en">then</div><div class="zh muted">時間｜那時 / 然後</div></div>
+        </div>
+        <div class="hr"></div>
+        <div class="muted">口訣：母音立 /ði/、子音惹 /ðə/（the）。there 回答 where、then 回答 when。</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+// --- Data ---
+const CARDS = [
+  {
+    w:'this', pos:'代名詞 / 指示', axes:'近 / 單數', hint:'距離：伸手可及',
+    meaning:'這個（靠近說話者的、單數）',
+    examples:[
+      {en:'This is my pen.', zh:'這是我的筆。'},
+      {en:'Hold this for a second.', zh:'幫我拿著這個一下。'}
+    ]
+  },
+  {
+    w:'these', pos:'代名詞 / 指示', axes:'近 / 複數', hint:'距離：在我面前的一些',
+    meaning:'這些（靠近說話者、複數）',
+    examples:[
+      {en:'These are great ideas.', zh:'這些想法很棒。'},
+      {en:'I’ll take these two.', zh:'我就買這兩個。'}
+    ]
+  },
+  {
+    w:'that', pos:'代名詞 / 指示', axes:'遠 / 單數', hint:'距離：要伸手去指',
+    meaning:'那個（離說話者較遠、單數）',
+    examples:[
+      {en:'That is your book.', zh:'那是你的書。'},
+      {en:'Who is that over there?', zh:'那邊那位是誰？'}
+    ]
+  },
+  {
+    w:'those', pos:'代名詞 / 指示', axes:'遠 / 複數', hint:'距離：遠處的一些',
+    meaning:'那些（離說話者較遠、複數）',
+    examples:[
+      {en:'Those are my shoes.', zh:'那些是我的鞋。'},
+      {en:"I don't like those colors.", zh:'我不喜歡那些顏色。'}
+    ]
+  },
+  {
+    w:'the', pos:'冠詞 / 定冠詞', axes:'特定 / 雙方已知', hint:'共識：你我都知道是哪個',
+    meaning:'那個／這個（特定的、已知的）',
+    examples:[
+      {en:'The cat is cute.', zh:'那隻貓很可愛。'},
+      {en:'Close the door, please.', zh:'請把門關上。'}
+    ]
+  },
+  {
+    w:'there', pos:'副詞 / 位置', axes:'空間 / 地點', hint:'回答 where：那裡；存在句 There is/are…',
+    meaning:'那裡；有（存在句）',
+    examples:[
+      {en:'There is a chair.', zh:'那裡有張椅子。'},
+      {en:'Put it over there.', zh:'把它放在那邊。'}
+    ]
+  },
+  {
+    w:'then', pos:'副詞 / 時間', axes:'時間 / 順序', hint:'回答 when：那時；連接「然後」',
+    meaning:'那時；然後',
+    examples:[
+      {en:'We ate, then slept.', zh:'我們吃完後就睡了。'},
+      {en:'Back then, I lived here.', zh:'那時候我住在這裡。'}
+    ]
+  }
+];
+
+// Quiz pool
+const QUIZ_BANK = {
+  mc: [
+    {q:'（哪個詞）表示「這些（近、複數）」？', a:'these'},
+    {q:'（哪個詞）用來回答 where 問句？', a:'there'},
+    {q:'（哪個詞）表示「那個（遠、單數）」？', a:'that'},
+    {q:'（哪個詞）是定冠詞，表示特定？', a:'the'},
+    {q:'（哪個詞）用來連接事件順序，意為「然後」？', a:'then'},
+    {q:'（哪個詞）表示「那些（遠、複數）」？', a:'those'},
+    {q:'（哪個詞）表示「這個（近、單數）」？', a:'this'}
+  ],
+  cloze: [
+    {q:'___ is my bag.（這是我的包）', a:'This'},
+    {q:'Put it over ___.（把它放在那邊）', a:'there'},
+    {q:'We ate, ___ slept.（我們吃完然後睡）', a:'then'},
+    {q:'___ cat is cute.（那隻貓很可愛，特定）', a:'The'},
+    {q:'___ are apples.（這些是蘋果）', a:'These'},
+    {q:'___ is your book.（那是你的書）', a:'That'},
+    {q:'___ are dogs.（那些是狗）', a:'Those'}
+  ]
+};
+
+// --- Elements ---
+const tabs = document.querySelectorAll('.tab');
+const screens = {
+  cards: document.getElementById('cards'),
+  quiz: document.getElementById('quiz'),
+  map: document.getElementById('map')
+};
+
+// Card elements
+const wEl = document.getElementById('w');
+const posEl = document.getElementById('pos');
+const axesEl = document.getElementById('axes');
+const hintEl = document.getElementById('hint');
+const meaningEl = document.getElementById('meaning');
+const exWrap = document.getElementById('examples');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+const speakWordBtn = document.getElementById('speakWord');
+const speakExBtn = document.getElementById('speakEx');
+const ttsToggle = document.getElementById('ttsToggle');
+
+// Quiz elements
+const qText = document.getElementById('qText');
+const choices = document.getElementById('choices');
+const againBtn = document.getElementById('again');
+const revealBtn = document.getElementById('reveal');
+const speakQBtn = document.getElementById('speakQ');
+
+let idx = 0;
+
+function renderCard(i){
+  const c = CARDS[i];
+  wEl.textContent = c.w;
+  posEl.textContent = c.pos;
+  axesEl.textContent = c.axes;
+  hintEl.textContent = c.hint;
+  meaningEl.textContent = c.meaning;
+  exWrap.innerHTML = c.examples.map(e=>`
+    <div class="ex"><div class="en">${e.en}</div><div class="zh">${e.zh}</div></div>
+  `).join('');
+  if (ttsToggle.checked){ speak(c.w); }
+}
+
+function prev(){ idx = (idx - 1 + CARDS.length) % CARDS.length; renderCard(idx); }
+function next(){ idx = (idx + 1) % CARDS.length; renderCard(idx); }
+
+prevBtn.onclick = prev;
+nextBtn.onclick = next;
+speakWordBtn.onclick = ()=> speak(CARDS[idx].w);
+speakExBtn.onclick = ()=> CARDS[idx].examples.forEach(e=> speak(e.en));
+
+// Keyboard arrows
+window.addEventListener('keydown',e=>{
+  if(document.activeElement && ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if(e.key==='ArrowLeft') prev();
+  if(e.key==='ArrowRight') next();
+});
+
+// TTS
+function speak(text){
+  const u = new SpeechSynthesisUtterance(text);
+  // 英文優先
+  const voices = speechSynthesis.getVoices();
+  const v = voices.find(v=> v.lang && v.lang.toLowerCase().startsWith('en')) || voices[0];
+  if(v) u.voice = v;
+  u.lang = v?.lang || 'en-US';
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+speechSynthesis.onvoiceschanged = ()=>{};
+
+// Tabs
+for (const t of tabs){
+  t.onclick = ()=>{
+    document.querySelector('.tab.active')?.classList.remove('active');
+    t.classList.add('active');
+    const name = t.dataset.tab;
+    for (const k in screens){ screens[k].classList.toggle('active', k===name); }
+  };
+}
+
+// QUIZ logic
+function shuffle(arr){ return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]); }
+let lastType = 'mc';
+function newQuiz(){
+  // alternate between mc and cloze
+  lastType = (lastType==='mc')? 'cloze' : 'mc';
+  const bank = QUIZ_BANK[lastType];
+  const item = bank[Math.floor(Math.random()*bank.length)];
+  choices.innerHTML='';
+  if(lastType==='mc'){
+    qText.textContent = item.q;
+    const all = shuffle(CARDS.map(c=>c.w));
+    const opts = shuffle([item.a, ...all.filter(x=>x!==item.a).slice(0,3)]);
+    for (const o of opts){
+      const div = document.createElement('div');
+      div.className='choice';
+      div.textContent=o;
+      div.onclick=()=>{
+        if(div.classList.contains('correct')||div.classList.contains('wrong')) return;
+        if(o===item.a){ div.classList.add('correct'); speak('Correct'); }
+        else { div.classList.add('wrong'); speak('Try again'); }
+      };
+      choices.appendChild(div);
+    }
+  } else {
+    qText.textContent = item.q;
+    const input = document.createElement('input');
+    input.placeholder='輸入答案（大小寫不限）';
+    input.className='btn'; input.style.width='100%'; input.style.background='#0f172a';
+    const submit = document.createElement('button');
+    submit.className='btn good'; submit.textContent='提交';
+    const row = document.createElement('div'); row.className='row';
+    row.append(input, submit);
+    choices.appendChild(row);
+    submit.onclick=()=>{
+      const ok = (input.value||'').trim().toLowerCase() === item.a.toLowerCase();
+      input.style.borderColor = ok? '#10b981' : '#ef4444';
+      speak(ok? 'Great job' : 'Not quite');
+    };
+  }
+}
+
+againBtn.onclick = newQuiz;
+revealBtn.onclick = ()=>{
+  if(lastType==='mc'){
+    [...choices.children].forEach(ch=>{ if(ch.textContent.trim().toLowerCase()===document.querySelector('#qText').dataset?.ans?.toLowerCase()) ch.classList.add('correct'); });
+  } else {
+    const bank = QUIZ_BANK[lastType];
+    // 簡化：重新顯示題目答案提示
+    qText.textContent += '  → 答案：' + (choices.querySelector('input')? QUIZ_BANK['cloze'].find(q=> q.q===qText.textContent.replace(/ → 答案.*/,'') )?.a || '' : '');
+  }
+};
+
+speakQBtn.onclick = ()=> speak(qText.textContent.replace(/（.*?）/g,''));
+
+// init
+renderCard(idx);
+newQuiz();
+</script>
+</body>
+</html>
